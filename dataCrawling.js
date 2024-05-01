@@ -1,5 +1,7 @@
 const puppeteer = require("puppeteer");
 const { getRandomDate } = require("./utils/random/randomDate");
+const fs = require("fs");
+const path = require("path");
 
 async function crawlDetailPage(data) {
   try {
@@ -127,8 +129,13 @@ async function crawlPage({ url, category }) {
     });
 
     const addDataList = productList.map((val) => {
+      const price = val.price.replace(",", "");
+      const defaultPrice = val.defaultPrice.replace(",", "");
       const isTimeSale = Math.floor(Math.random() * 4) === 1;
-      const popularity = Math.floor(Math.random() * (5 - 1 + 1)) + 1;
+
+      const randomValue = Math.random() * (5.0 - 1.0) + 1.0;
+      const popularity = Math.round(randomValue * 10) / 10;
+
       const time_sale = isTimeSale ? getRandomDate("next") : "";
       const release_date = getRandomDate("pre");
       const is_issue = Math.floor(Math.random() * 2) === 1;
@@ -136,6 +143,9 @@ async function crawlPage({ url, category }) {
 
       return {
         ...val,
+        price: Number(price),
+        defaultPrice: Number(defaultPrice),
+        discount: Number(val.discount),
         category,
         popularity,
         time_sale,
@@ -198,7 +208,23 @@ async function productCrawl() {
     prdList.push(data);
   }
 
-  return prdList.flat();
+  const jsonContent = JSON.stringify(prdList.flat(), null, 2); // 읽기 쉽게 들여쓰기
+
+  // JSON 파일을 저장할 경로를 설정합니다
+  const outputPath = path.join(__dirname, "productCrawlData.json");
+
+  // 파일을 저장합니다
+  fs.writeFile(outputPath, jsonContent, "utf8", (err) => {
+    if (err) {
+      console.error("Error writing JSON file:", err);
+    } else {
+      console.log("JSON file has been saved.");
+    }
+  });
+
+  // return prdList.flat();
 }
+
+productCrawl();
 
 module.exports = { productCrawl };
