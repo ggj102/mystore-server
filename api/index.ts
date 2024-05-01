@@ -39,65 +39,30 @@ app.get("/uploadUser", function (req, res) {
 
 // -------------- test --------------------
 
-// async function deleteProductAndDetailById(id) {
-//   const transaction = await prisma.$transaction([
-//     prisma.Product_Detail.delete({
-//       where: {
-//         id,
-//       },
-//     }),
-//     prisma.Product.delete({
-//       where: {
-//         id,
-//       },
-//     }),
-//   ]);
-
-//   console.log(`id가 ${id}인 제품과 id가 ${id}인 상세정보가 삭제되었습니다.`);
-//   return transaction;
-// }
-
-// deleteProductAndDetailById(2)
-//   .then(() => {
-//     console.log("삭제가 완료되었습니다.");
-//   })
-//   .catch((error) => {
-//     console.error("삭제 중 오류가 발생했습니다:", error);
-//   });
-
-// async function createProducts() {
-//   try {
-//     // 제품 데이터 일괄 삽입
-//     const productsData = await productCrawl();
-
-//     for (let i = 0; i < productsData.length; i++) {
-//       const productData = productsData[i];
-
-//       await prisma.product.create({
-//         data: {
-//           ...productData,
-//           product_detail: {
-//             create: { ...productData.product_detail },
-//           },
-//         },
-//         include: { product_detail: true }, // product_detail을 반환하도록 include 지정
-//       });
-//     }
-
-//     console.log("Products가 성공적으로 저장되었습니다.");
-//   } catch (error) {
-//     console.error("Products 저장 중 오류가 발생했습니다:", error);
-//     throw error;
-//   }
-// }
-
-// createProducts()
-//   .then()
-//   .catch((error) => {
-//     console.error("Products 저장 중 오류가 발생했습니다:", error);
-//   });
-
 app.get("/productList", async (req, res) => {
+  const PAGE_SIZE = 20;
+
+  try {
+    const pageNumber = parseInt(req.query.page) || 1;
+    const category = req.query.category || "";
+
+    const skip = (pageNumber - 1) * PAGE_SIZE; // 페이지 번호에 따른 skip 값 계산
+    const take = PAGE_SIZE; // 페이지당 항목 수
+
+    const data = await prisma.product.findMany({
+      where: category ? { category: category } : {},
+      skip,
+      take,
+    });
+
+    res.json(data);
+  } catch (error) {
+    console.error("Error fetching page:", error);
+    throw error;
+  }
+});
+
+app.get("/allProductList", async (req, res) => {
   try {
     // Prisma를 사용하여 데이터베이스에서 데이터를 가져옵니다.
     const products = await prisma.Product.findMany();
