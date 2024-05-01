@@ -189,16 +189,16 @@ async function productCrawl() {
     "https://cnpmall.com/category/%EC%BF%A0%EC%85%98%EB%B2%A0%EC%9D%B4%EC%8A%A4/70/"; // 쿠션/베이스
 
   const urlArr = [
-    { url: url1, category: "cleansing " },
-    { url: url2, category: "booster_toner " },
-    { url: url21, category: "booster_toner " },
-    { url: url3, category: "ampoule_essence " },
-    { url: url31, category: "ampoule_essence " },
-    { url: url4, category: "cream " },
-    { url: url5, category: "pack_mask " },
-    { url: url6, category: "mist " },
-    { url: url7, category: "sun_care " },
-    { url: url8, category: "cushion_base " },
+    { url: url1, category: "cleansing" },
+    { url: url2, category: "booster_toner" },
+    { url: url21, category: "booster_toner" },
+    { url: url3, category: "ampoule_essence" },
+    { url: url31, category: "ampoule_essence" },
+    { url: url4, category: "cream" },
+    { url: url5, category: "pack_mask" },
+    { url: url6, category: "mist" },
+    { url: url7, category: "sun_care" },
+    { url: url8, category: "cushion_base" },
   ];
 
   const prdList = [];
