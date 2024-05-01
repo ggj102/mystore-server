@@ -24,14 +24,14 @@ model Product {
   id             Int      @id @default(autoincrement())
   name           String
   description    String
-  defaultPrice   String
-  price          String
-  discount       String
+  defaultPrice   Int
+  price          Int
+  discount       Int
   image_path     String
   category       String
-  popularity     Int
-  time_sale      String
-  release_date   String
+  popularity     Float
+  time_sale      DateTime?
+  release_date   DateTime
   is_issue       Boolean
   is_event       Boolean
   product_detail Product_Detail?
