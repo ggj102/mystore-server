@@ -53,9 +53,19 @@ app.get("/productList", async (req, res) => {
       where: category ? { category: category } : {},
       skip,
       take,
+      orderBy: {
+        release_date: "desc",
+      },
     });
 
-    res.json(data);
+    const totalCount = await prisma.product.count({
+      // 전체 항목 수를 가져오는 쿼리 추가
+      where: category ? { category: category } : {},
+    });
+
+    const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
+    res.json({ data, totalPages, totalCount });
   } catch (error) {
     console.error("Error fetching page:", error);
     throw error;
