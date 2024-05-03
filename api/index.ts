@@ -39,12 +39,30 @@ app.get("/uploadUser", function (req, res) {
 
 // -------------- test --------------------
 
+const getSort = (sort) => {
+  switch (sort) {
+    case "popularity_desc":
+      return { popularity: "desc" };
+    case "new_desc":
+      return { release_date: "desc" };
+    case "name_asc":
+      return { name: "asc" };
+    case "price_asc":
+      return { price: "asc" };
+    case "price_desc":
+      return { price: "desc" };
+    default:
+      return { popularity: "desc" };
+  }
+};
+
 app.get("/productList", async (req, res) => {
   const PAGE_SIZE = 20;
 
   try {
     const pageNumber = parseInt(req.query.page) || 1;
     const category = req.query.category || "";
+    const sort = req.query.sort || "";
 
     const skip = (pageNumber - 1) * PAGE_SIZE; // 페이지 번호에 따른 skip 값 계산
     const take = PAGE_SIZE; // 페이지당 항목 수
@@ -53,9 +71,7 @@ app.get("/productList", async (req, res) => {
       where: category ? { category: category } : {},
       skip,
       take,
-      orderBy: {
-        release_date: "desc",
-      },
+      orderBy: getSort(sort),
     });
 
     const totalCount = await prisma.product.count({
@@ -79,6 +95,41 @@ app.get("/allProductList", async (req, res) => {
 
     // 데이터를 JSON 형식으로 응답합니다.
     res.json(products);
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({ error: "An error occurred while fetching data" });
+  }
+});
+
+app.get("/timeSaleProduct", async (req, res) => {
+  const PAGE_SIZE = 20;
+
+  try {
+    const currentDate = new Date();
+    const yesterday = new Date(currentDate);
+
+    yesterday.setDate(currentDate.getDate() - 1);
+
+    const pageNumber = parseInt(req.query.page) || 1;
+    const skip = (pageNumber - 1) * PAGE_SIZE; // 페이지 번호에 따른 skip 값 계산
+    const take = PAGE_SIZE; // 페이지당 항목 수
+
+    const products = await prisma.Product.findMany({
+      where: { time_sale: { not: null, gt: yesterday.toISOString() } },
+      orderBy: { time_sale: "asc" },
+      skip,
+      take,
+    });
+
+    const totalCount = await prisma.product.count({
+      // 전체 항목 수를 가져오는 쿼리 추가
+      where: { time_sale: { not: null, gt: yesterday.toISOString() } },
+    });
+
+    const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
+    // 데이터를 JSON 형식으로 응답합니다.
+    res.json({ data: products, totalPages, totalCount });
   } catch (error) {
     console.error("Error fetching products:", error);
     res.status(500).json({ error: "An error occurred while fetching data" });
