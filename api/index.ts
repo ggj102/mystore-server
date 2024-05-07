@@ -39,6 +39,8 @@ app.get("/uploadUser", function (req, res) {
 
 // -------------- test --------------------
 
+const PAGE_SIZE = 20;
+
 const getSort = (sort) => {
   switch (sort) {
     case "popularity_desc":
@@ -57,8 +59,6 @@ const getSort = (sort) => {
 };
 
 app.get("/productList", async (req, res) => {
-  const PAGE_SIZE = 20;
-
   try {
     const pageNumber = parseInt(req.query.page) || 1;
     const category = req.query.category || "";
@@ -102,8 +102,6 @@ app.get("/allProductList", async (req, res) => {
 });
 
 app.get("/timeSaleProduct", async (req, res) => {
-  const PAGE_SIZE = 20;
-
   try {
     const currentDate = new Date();
     const yesterday = new Date(currentDate);
@@ -129,6 +127,41 @@ app.get("/timeSaleProduct", async (req, res) => {
     const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
     // 데이터를 JSON 형식으로 응답합니다.
+    res.json({ data: products, totalPages, totalCount });
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({ error: "An error occurred while fetching data" });
+  }
+});
+
+app.get("/searchResult", async (req, res) => {
+  try {
+    const keyword = req.query.keyword;
+    const sort = req.query.sort || "";
+    const pageNumber = parseInt(req.query.page) || 1;
+
+    const skip = (pageNumber - 1) * PAGE_SIZE;
+    const take = PAGE_SIZE;
+
+    const results = await prisma.$queryRaw`
+      SELECT * 
+      FROM "Product" 
+      WHERE REPLACE(name, ' ', '') LIKE ${"%" + keyword + "%"} 
+      or REPLACE(description, ' ', '') LIKE ${"%" + keyword + "%"}
+    `;
+
+    const idMap = results.map((val) => val.id);
+
+    const products = await prisma.Product.findMany({
+      where: { id: { in: idMap } },
+      orderBy: getSort(sort),
+      skip,
+      take,
+    });
+
+    const totalCount = results.length;
+    const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
     res.json({ data: products, totalPages, totalCount });
   } catch (error) {
     console.error("Error fetching products:", error);
