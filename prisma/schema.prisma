@@ -14,10 +14,13 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  createdAt DateTime @default(now())
+  id             Int      @id @default(autoincrement())
+  nick_name      String
+  email          String
+  phone          String
+  address        String
+  detail_address String
+  message        String
 }
 
 model Product {
@@ -46,4 +49,20 @@ model Product_Detail {
   delivery_type       String
   delivery_price      String
   product             Product? @relation(fields: [id], references: [id])
+}
+
+model Cart {
+  user_id        Int
+  item_id        Int
+  option_id      Int
+  count          Int
+
+  @@id([user_id, item_id, option_id])
+}
+
+model Product_Option {
+  option_id      Int  @id @default(autoincrement())
+  item_id        Int
+  name           String
+  option_price   Int
 }
