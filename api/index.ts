@@ -58,6 +58,21 @@ const getSort = (sort) => {
   }
 };
 
+app.get("/testUserInfo", async (req, res) => {
+  try {
+    // Prisma를 사용하여 데이터베이스에서 데이터를 가져옵니다.
+    const user = await prisma.user.findUnique({
+      where: { id: 1 },
+    });
+
+    // 데이터를 JSON 형식으로 응답합니다.
+    res.json(user);
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({ error: "An error occurred while fetching data" });
+  }
+});
+
 app.get("/productList", async (req, res) => {
   try {
     const pageNumber = parseInt(req.query.page) || 1;
@@ -193,6 +208,67 @@ app.get("/productDetail/:id", async (req, res) => {
 
     // 데이터를 JSON 형식으로 응답합니다.
     res.json(detailData);
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({ error: "An error occurred while fetching data" });
+  }
+});
+
+app.get("/productOption", async (req, res) => {
+  try {
+    const id = parseInt(req.query.id);
+
+    const results = await prisma.Product_Option.findMany({
+      where: {
+        item_id: id,
+      },
+    });
+
+    res.json(results);
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({ error: "An error occurred while fetching data" });
+  }
+});
+
+app.post("/cart", async (req, res) => {
+  try {
+    req.body.forEach(async (data) => {
+      const { user_id, item_id, option_id } = data;
+
+      const existingData = await prisma.cart.findUnique({
+        where: {
+          user_id_item_id_option_id: {
+            user_id,
+            item_id,
+            option_id,
+          },
+        },
+      });
+
+      if (existingData) {
+        // 중복 시 카운트 증가
+        const updateCart = await prisma.cart.update({
+          where: {
+            user_id_item_id_option_id: {
+              user_id,
+              item_id,
+              option_id,
+            },
+          },
+          data: {
+            count: {
+              increment: data.count,
+            },
+          },
+        });
+        return res.json(updateCart);
+      } else {
+        const createCart = await prisma.cart.create({ data });
+
+        return res.json(createCart);
+      }
+    });
   } catch (error) {
     console.error("Error fetching products:", error);
     res.status(500).json({ error: "An error occurred while fetching data" });
