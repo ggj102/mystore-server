@@ -304,7 +304,7 @@ app.post("/cart", async (req, res) => {
 
       if (existingData) {
         // 중복 시 카운트 증가
-        const updateCart = await prisma.cart.update({
+        await prisma.cart.update({
           where: {
             user_id_item_id_option_id: {
               user_id,
@@ -363,8 +363,6 @@ app.put("/cart", async (req, res) => {
 
 app.delete("/cart", async (req, res) => {
   try {
-    console.log(req.body, "바디");
-
     for (const data of req.body) {
       const { user_id, item_id, option_id } = data;
 
@@ -382,61 +380,246 @@ app.delete("/cart", async (req, res) => {
   }
 });
 
-// app.post("/products", async (req, res) => {
-//   try {
-//     // console.log(req, "테스트");
-//     const { name, price, category } = req.body; // 요청 바디에서 새 제품의 정보를 추출합니다.
-
-//     // Prisma를 사용하여 데이터베이스에 새 제품을 추가합니다.
-//     const newProduct = await prisma.product.create({
-//       data: {
-//         name,
-//         price,
-//         category,
-//       },
-//     });
-
-//     // 새 제품을 JSON 형식으로 응답합니다.
-//     res.json(newProduct);
-//   } catch (error) {
-//     console.error("Error creating product:", error);
-//     res
-//       .status(500)
-//       .json({ error: "An error occurred while creating the product" });
-//   }
-// });
-
-app.put("/products/:id", async (req, res) => {
+app.get("/order", async (req, res) => {
   try {
-    const productId = parseInt(req.params.id); // URL 파라미터에서 제품 ID를 가져옵니다.
-    const { name, price, category } = req.body; // 요청 바디에서 새 제품 정보를 가져옵니다.
+    const order_id = parseInt(req.query.order_id);
 
-    // Prisma를 사용하여 해당 ID의 제품을 찾습니다.
-    const existingProduct = await prisma.product.findUnique({
+    const transaction = await prisma.$transaction([
+      prisma.Order.findUnique({
+        where: {
+          id: order_id,
+        },
+      }),
+
+      prisma.Order_Item.findMany({
+        where: {
+          order_id,
+        },
+      }),
+    ]);
+
+    const [order, order_item] = transaction;
+
+    return res.json({ order, order_item });
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({ error: "An error occurred while fetching data" });
+  }
+});
+
+app.post("/order", async (req, res) => {
+  try {
+    const { user_id, order_item } = req.body;
+
+    const result = await prisma.Order.create({
+      data: {
+        user_id,
+        order_Item: {
+          create: order_item.map((item) => {
+            const { id, product_option, cart_info } = item;
+
+            return {
+              item_id: id,
+              option_id: product_option.option_id,
+              count: cart_info.count,
+            };
+          }),
+        },
+      },
+      include: { order_Item: true },
+    });
+
+    return res.json({ order_id: result.id });
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({ error: "An error occurred while fetching data" });
+  }
+});
+
+app.put("/order", async (req, res) => {
+  try {
+    const order_id = parseInt(req.query.order_id);
+
+    const existingOrder = await prisma.Order.findUnique({
       where: {
-        id: productId,
+        id: order_id,
       },
     });
 
     // 해당 ID의 제품이 없는 경우 404 에러를 반환합니다.
-    if (!existingProduct) {
-      return res.status(404).json({ error: "Product not found" });
+    if (!existingOrder) {
+      return res.status(404).json({ error: "Order not found" });
     }
 
-    // Prisma를 사용하여 제품을 업데이트합니다.
-    const updatedProduct = await prisma.product.update({
+    await prisma.Order.update({
       where: {
-        id: productId,
+        id: order_id,
       },
       data: {
-        name,
-        price,
-        category,
+        ...req.body,
       },
     });
 
-    // 업데이트된 제품을 응답합니다.
-    res.json(updatedProduct);
+    return res.json({ message: "success" });
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({ error: "An error occurred while fetching data" });
+  }
+});
+
+const getOrderItem = async (order_id) => {
+  const items = await prisma.Order_Item.findMany({
+    where: {
+      order_id,
+    },
+  });
+
+  const order_items = Array();
+
+  for (const item of items) {
+    const { item_id, option_id, count } = item;
+
+    const transaction = await prisma.$transaction([
+      prisma.Product.findUnique({
+        where: {
+          id: item_id,
+        },
+      }),
+      prisma.Product_Detail.findUnique({
+        where: {
+          id: item_id,
+        },
+      }),
+      prisma.Product_Option.findUnique({
+        where: {
+          option_id,
+        },
+      }),
+    ]);
+
+    const itemData = {
+      ...transaction[0],
+      order_id,
+      cart_info: { count },
+      product_detail: transaction[1],
+      product_option: transaction[2],
+    };
+
+    order_items.push(itemData);
+  }
+
+  return order_items;
+};
+
+app.get("/orderItem", async (req, res) => {
+  try {
+    const order_id = parseInt(req.query.order_id);
+
+    const order_items = await getOrderItem(order_id);
+
+    return res.json(order_items);
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({ error: "An error occurred while fetching data" });
+  }
+});
+
+app.delete("/orderItem", async (req, res) => {
+  try {
+    const { order_id, item_id, option_id } = req.body;
+
+    await prisma.Order_Item.delete({
+      where: {
+        order_id_item_id_option_id: { order_id, item_id, option_id },
+      },
+    });
+
+    return res.json({ message: "success" });
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({ error: "An error occurred while fetching data" });
+  }
+});
+
+app.get("/success", async (req, res) => {
+  try {
+    const order_id = parseInt(req.query.order_id);
+    const amount = parseInt(req.query.amount);
+
+    const order = await prisma.Order.findUnique({
+      where: {
+        id: order_id,
+      },
+    });
+
+    // 해당 ID의 제품이 없는 경우 404 에러를 반환합니다.
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    const order_items = await getOrderItem(order_id);
+
+    const priceReduce = order_items.reduce((acc, val) => {
+      const delivery = val.product_detail.delivery_price;
+      const optionPrice = val.product_option.option_price;
+
+      const dPrice = delivery === "무료" ? 0 : delivery;
+      const price = (val.price + optionPrice) * val.cart_info.count;
+
+      return acc + dPrice + price;
+    }, 0);
+
+    if (priceReduce !== amount) {
+      return res.status(400).json({ error: "Payment Failed: Price Mismatch" });
+    }
+
+    await prisma.Order.update({
+      where: {
+        id: order_id,
+      },
+      data: {
+        payment_key: req.query.paymentKey,
+        total_payment_price: amount,
+      },
+    });
+
+    for (const item of order_items) {
+      const { id, name, price, image_path, product_option } = item;
+
+      const count = item.cart_info.count;
+      const payment_price = (price + product_option.option_price) * count;
+
+      await prisma.Order_Item.update({
+        where: {
+          order_id_item_id_option_id: {
+            order_id,
+            item_id: id,
+            option_id: product_option.option_id,
+          },
+        },
+        data: {
+          item_name: name,
+          item_option: product_option.name,
+          payment_price,
+          image_path,
+        },
+      });
+
+      await prisma.cart.delete({
+        where: {
+          user_id_item_id_option_id: {
+            user_id: order.user_id,
+            item_id: id,
+            option_id: product_option.option_id,
+          },
+        },
+      });
+    }
+
+    res.redirect(
+      302,
+      `http://localhost:3000/orderComplete?order_id=${order_id}`
+    );
   } catch (error) {
     console.error("Error updating product:", error);
     res
