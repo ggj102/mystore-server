@@ -20,7 +20,7 @@ model User {
   phone          String
   address        String
   detail_address String
-  message        String
+  message        String?
 }
 
 model Product {
@@ -51,6 +51,13 @@ model Product_Detail {
   product             Product? @relation(fields: [id], references: [id])
 }
 
+model Product_Option {
+  option_id      Int  @id @default(autoincrement())
+  item_id        Int
+  name           String
+  option_price   Int
+}
+
 model Cart {
   user_id        Int
   item_id        Int
@@ -60,9 +67,32 @@ model Cart {
   @@id([user_id, item_id, option_id])
 }
 
-model Product_Option {
-  option_id      Int  @id @default(autoincrement())
+model Order {
+  id                   Int @id @default(autoincrement())
+  user_id              Int 
+  order_name           String?
+  recipient            String?
+  phone                String?
+  delivery_address     String?
+  delivery_message     String?
+  total_payment_price  Int?
+  total_delivery_price Int?
+  created_at            DateTime @default(now())
+  payment_key           String?
+  payment_method       String?
+  order_Item           Order_Item[]
+}
+
+model Order_Item {
+  order_id       Int
   item_id        Int
-  name           String
-  option_price   Int
+  option_id      Int
+  item_name      String?
+  item_option    String?
+  image_path     String?
+  payment_price  Int?
+  count          Int
+  order          Order? @relation(fields: [order_id], references: [id])
+
+  @@id([order_id, item_id, option_id])
 }
