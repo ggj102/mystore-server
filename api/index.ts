@@ -161,8 +161,8 @@ app.get("/searchResult", async (req, res) => {
     const results = await prisma.$queryRaw`
       SELECT * 
       FROM "Product" 
-      WHERE REPLACE(name, ' ', '') LIKE ${"%" + keyword + "%"} 
-      or REPLACE(description, ' ', '') LIKE ${"%" + keyword + "%"}
+      WHERE LOWER(REPLACE(name, ' ', '')) LIKE ${"%" + keyword + "%"} 
+      or LOWER(REPLACE(description, ' ', '')) LIKE ${"%" + keyword + "%"}
     `;
 
     const idMap = results.map((val) => val.id);
