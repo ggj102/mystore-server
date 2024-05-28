@@ -14,9 +14,20 @@ datasource db {
 }
 
 model User {
+  id                  Int      @id @default(autoincrement())
+  user_id             String   @unique
+  user_password       String
+  user_name           String
+  user_email          String
+  user_phone          String
+  user_address        String
+  user_detail_address String
+}
+
+model User_Delivery_Address {
   id             Int      @id @default(autoincrement())
-  nick_name      String
-  email          String
+  user_id        Int
+  recipient      String
   phone          String
   address        String
   detail_address String
