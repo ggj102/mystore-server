@@ -5,6 +5,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const { authenticateToken } = require("../middleware/authenticate");
+const { getAccessTokenUserId } = require("../utils/getAccessTokenUserId");
 
 const getOrderItem = async (order_id) => {
   const items = await prisma.Order_Item.findMany({
@@ -50,14 +51,16 @@ const getOrderItem = async (order_id) => {
   return order_items;
 };
 
-router.get("/", async (req, res) => {
+router.get("/", authenticateToken, async (req, res) => {
   try {
+    const user_id = getAccessTokenUserId(req);
     const order_id = parseInt(req.query.order_id);
 
     const transaction = await prisma.$transaction([
       prisma.Order.findUnique({
         where: {
           id: order_id,
+          user_id,
         },
       }),
 
@@ -108,17 +111,18 @@ router.post("/", authenticateToken, async (req, res) => {
   }
 });
 
-router.put("/", async (req, res) => {
+router.put("/", authenticateToken, async (req, res) => {
   try {
+    const user_id = getAccessTokenUserId(req);
     const order_id = parseInt(req.query.order_id);
 
     const existingOrder = await prisma.Order.findUnique({
       where: {
         id: order_id,
+        user_id,
       },
     });
 
-    // 해당 ID의 제품이 없는 경우 404 에러를 반환합니다.
     if (!existingOrder) {
       return res.status(404).json({ error: "Order not found" });
     }
