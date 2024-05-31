@@ -4,7 +4,7 @@ const authenticateToken = (req, res, next) => {
   const { accessToken } = req.cookies;
 
   if (!accessToken) {
-    return res.status(401).json({ message: "token denied" });
+    return res.status(401).json({ message: "token expired" });
   }
 
   try {
