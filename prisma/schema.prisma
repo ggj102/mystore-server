@@ -88,8 +88,9 @@ model Order {
   delivery_message     String?
   total_payment_price  Int?
   total_delivery_price Int?
-  created_at            DateTime @default(now())
-  payment_key           String?
+  created_at           DateTime @default(now())
+  updated_at            DateTime @updatedAt
+  payment_key          String?
   payment_method       String?
   order_Item           Order_Item[]
 }
@@ -103,7 +104,7 @@ model Order_Item {
   image_path     String?
   payment_price  Int?
   count          Int
-  order          Order? @relation(fields: [order_id], references: [id])
+  order          Order? @relation(fields: [order_id], references: [id], onDelete: Cascade)
 
   @@id([order_id, item_id, option_id])
 }
