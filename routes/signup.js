@@ -5,6 +5,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const bcrypt = require("bcrypt");
+const { userDeliveryAddressSchema } = require("./user/validationSchema");
 
 router.post("/", async (req, res) => {
   const existingUser = await prisma.user.findUnique({
@@ -12,20 +13,44 @@ router.post("/", async (req, res) => {
   });
 
   if (existingUser) {
-    return res.status(409).json({ message: "Duplicate user ID" });
+    return res.status(409).json({ message: "중복된 아이디 입니다." });
+  }
+
+  const { name, deliveryData } = req.body;
+
+  const validationData = await userDeliveryAddressSchema
+    .validate({ ...deliveryData, recipient: name })
+    .then(() => true)
+    .catch(() => false);
+
+  if (!validationData) {
+    return res.status(400).json({ message: "입력이 잘못된 부분이 있습니다." });
   }
 
   try {
     const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(
-      req.body.user_password,
-      saltRounds
-    );
+    const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
 
-    await prisma.User.create({
+    const { user_id, name, email } = req.body;
+
+    const userData = await prisma.User.create({
       data: {
-        ...req.body,
-        user_password: hashedPassword,
+        ...req.body.deliveryData,
+        user_id,
+        name,
+        email,
+        password: hashedPassword,
+      },
+    });
+
+    await prisma.User_Delivery_Address.create({
+      data: {
+        ...deliveryData,
+        user_id: userData.id,
+        name: "",
+        recipient: name,
+        is_default: true,
+        direct_message: "",
       },
     });
 
@@ -37,16 +62,12 @@ router.post("/", async (req, res) => {
 });
 
 router.post("/idDuplicationCheck", async (req, res) => {
-  console.log(req.body.user_id, "중복체크");
-
   const user_id = req.body.user_id;
 
   const existingUser = await prisma.user.findUnique({ where: { user_id } });
 
-  // 중복된 아이디가 존재할 경우
-
   if (existingUser) {
-    res.status(409).json({ message: "Duplicate user ID" });
+    res.status(409).json({ message: "중복된 아이디 입니다." });
   } else {
     res.status(200).json({ message: "User ID is available" });
   }
