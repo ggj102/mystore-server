@@ -1,0 +1,137 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               Int      @id @default(autoincrement())
+  user_id          String   @unique
+  password         String
+  name             String
+  email            String
+  phone_prefix     String
+  phone_start      String
+  phone_end        String
+  zone_code        String
+  address          String
+  detail_address   String
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+}
+
+model User_Delivery_Address {
+  id               Int      @id @default(autoincrement())
+  user_id          Int
+  name             String?
+  is_default       Boolean? 
+  recipient        String
+  phone_prefix     String
+  phone_start      String
+  phone_end        String
+  zone_code        String
+  address          String
+  detail_address   String
+  direct_message   String?
+  updated_at       DateTime @updatedAt
+}
+
+model User_Favorites {
+  user_id          Int
+  item_id          Int
+  created_at       DateTime @default(now())
+
+  @@id([user_id, item_id])
+}
+
+model User_Recently_View {
+  user_id          Int
+  item_id          Int
+  updated_at       DateTime @updatedAt
+
+  @@id([user_id, item_id])
+}
+
+model Product {
+  id             Int      @id @default(autoincrement())
+  name           String
+  description    String
+  defaultPrice   Int
+  price          Int
+  discount       Int
+  image_path     String
+  category       String
+  popularity     Float
+  time_sale      DateTime?
+  release_date   DateTime
+  is_issue       Boolean
+  is_event       Boolean
+  product_detail Product_Detail?
+}
+
+model Product_Detail {
+  id                  Int      @id 
+  image_path          String
+  sub_image_path      String[]
+  product_detail_image_path String[]
+  domestic            String
+  delivery_type       String
+  delivery_price      String
+  product             Product? @relation(fields: [id], references: [id])
+}
+
+model Product_Option {
+  option_id      Int  @id @default(autoincrement())
+  item_id        Int
+  name           String
+  option_price   Int
+}
+
+model Cart {
+  user_id        Int
+  item_id        Int
+  option_id      Int
+  count          Int
+
+  @@id([user_id, item_id, option_id])
+}
+
+model Order {
+  id                   Int @id @default(autoincrement())
+  user_id              Int 
+  order_name           String?
+  recipient            String?
+  phone                String?
+  delivery_address     String?
+  delivery_message     String?
+  total_payment_price  Int?
+  total_delivery_price Int?
+  created_at           DateTime @default(now())
+  updated_at            DateTime @updatedAt
+  payment_key          String?
+  payment_method       String?
+  order_Item           Order_Item[]
+}
+
+model Order_Item {
+  order_id       Int
+  item_id        Int
+  option_id      Int
+  item_name      String?
+  item_option    String?
+  image_path     String?
+  payment_price  Int?
+  count          Int
+  order          Order? @relation(fields: [order_id], references: [id], onDelete: Cascade)
+
+  @@id([order_id, item_id, option_id])
+}

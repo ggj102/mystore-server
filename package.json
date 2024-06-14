@@ -5,14 +5,29 @@
   "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node api/index.ts"
+    "start": "node app.js",
+    "crawl": "node dataCrawling.js",
+    "prisma:dev": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@prisma/client": "^5.12.1",
     "@vercel/postgres": "^0.7.2",
-    "dotenv": "^16.4.1",
-    "express": "^4.18.2"
+    "axios": "^1.6.8",
+    "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "eslint": "^9.2.0",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "puppeteer": "^22.7.1",
+    "yup": "^1.4.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.12.1"
   }
 }
