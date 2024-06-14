@@ -15,12 +15,12 @@ app.use(bodyParser.urlencoded({ extended: true }));
 require("dotenv").config();
 
 const port = 3005;
-const routes = require("./routes");
+const routes = require("../routes");
 
 app.use("/", routes);
 
 app.get("/", function (req, res) {
-  res.sendFile(path.join(__dirname, ".", "components", "home.htm"));
+  res.sendFile(path.join(__dirname, "..", "components", "home.htm"));
 });
 
 app.listen(port, () => {
