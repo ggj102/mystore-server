@@ -1,5 +1,6 @@
 const express = require("express");
 const app = express();
+const path = require("path");
 
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
@@ -17,6 +18,10 @@ const port = 3005;
 const routes = require("./routes");
 
 app.use("/", routes);
+
+app.get("/", function (req, res) {
+  res.sendFile(path.join(__dirname, ".", "components", "home.htm"));
+});
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
