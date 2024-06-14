@@ -14,24 +14,51 @@ datasource db {
 }
 
 model User {
-  id                  Int      @id @default(autoincrement())
-  user_id             String   @unique
-  user_password       String
-  user_name           String
-  user_email          String
-  user_phone          String
-  user_address        String
-  user_detail_address String
+  id               Int      @id @default(autoincrement())
+  user_id          String   @unique
+  password         String
+  name             String
+  email            String
+  phone_prefix     String
+  phone_start      String
+  phone_end        String
+  zone_code        String
+  address          String
+  detail_address   String
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
 }
 
 model User_Delivery_Address {
-  id             Int      @id @default(autoincrement())
-  user_id        Int
-  recipient      String
-  phone          String
-  address        String
-  detail_address String
-  message        String?
+  id               Int      @id @default(autoincrement())
+  user_id          Int
+  name             String?
+  is_default       Boolean? 
+  recipient        String
+  phone_prefix     String
+  phone_start      String
+  phone_end        String
+  zone_code        String
+  address          String
+  detail_address   String
+  direct_message   String?
+  updated_at       DateTime @updatedAt
+}
+
+model User_Favorites {
+  user_id          Int
+  item_id          Int
+  created_at       DateTime @default(now())
+
+  @@id([user_id, item_id])
+}
+
+model User_Recently_View {
+  user_id          Int
+  item_id          Int
+  updated_at       DateTime @updatedAt
+
+  @@id([user_id, item_id])
 }
 
 model Product {
