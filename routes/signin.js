@@ -9,7 +9,7 @@ const jwt = require("jsonwebtoken");
 
 router.post("/", async (req, res) => {
   try {
-    const { user_id, user_password } = req.body;
+    const { user_id, password } = req.body;
 
     const user = await prisma.user.findUnique({ where: { user_id } });
 
@@ -18,10 +18,7 @@ router.post("/", async (req, res) => {
     }
 
     // 비밀번호 검증
-    const isPasswordValid = await bcrypt.compare(
-      user_password,
-      user.user_password
-    );
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
       return res.status(401).json({ message: "비밀번호가 틀립니다." });

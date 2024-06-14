@@ -17,11 +17,14 @@ router.get("/", authenticateToken, async (req, res) => {
       select: {
         id: true,
         user_id: true,
-        user_name: true,
-        user_email: true,
-        user_phone: true,
-        user_address: true,
-        user_detail_address: true,
+        name: true,
+        email: true,
+        phone_prefix: true,
+        phone_start: true,
+        phone_end: true,
+        zone_code: true,
+        address: true,
+        detail_address: true,
       },
     });
 
@@ -38,7 +41,7 @@ router.get("/myPage", authenticateToken, async (req, res) => {
 
     const user_name = await prisma.User.findUnique({
       where: { id },
-      select: { user_name: true },
+      select: { name: true },
     });
 
     const order_count = await prisma.Order.count({
@@ -130,6 +133,7 @@ router.get("/deliveryList", authenticateToken, async (req, res) => {
         id: true,
         user_id: true,
         is_default: true,
+        name: true,
         recipient: true,
         phone_prefix: true,
         phone_start: true,
@@ -137,7 +141,6 @@ router.get("/deliveryList", authenticateToken, async (req, res) => {
         zone_code: true,
         address: true,
         detail_address: true,
-        message_index: true,
         direct_message: true,
       },
       orderBy: [{ is_default: "desc" }, { updated_at: "desc" }],
@@ -164,6 +167,7 @@ router.get("/delivery", authenticateToken, async (req, res) => {
         id: true,
         user_id: true,
         is_default: true,
+        name: true,
         recipient: true,
         phone_prefix: true,
         phone_start: true,
@@ -171,7 +175,6 @@ router.get("/delivery", authenticateToken, async (req, res) => {
         zone_code: true,
         address: true,
         detail_address: true,
-        message_index: true,
         direct_message: true,
       },
     });
