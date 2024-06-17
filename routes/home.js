@@ -35,7 +35,7 @@ router.get("/", async (req, res) => {
   try {
     const now = new Date();
     const products = await prisma.Product.findMany();
-    const timeSale = await prisma.Product.findMany({
+    const timeSaleProduct = await prisma.Product.findMany({
       where: {
         time_sale: {
           gte: now,
@@ -44,12 +44,12 @@ router.get("/", async (req, res) => {
       orderBy: {
         time_sale: "asc",
       },
+      take: 8,
     });
 
     const bestSeller = getBestSeller(products);
     const newProduct = getNewProduct(products);
     const introVideo = getIntroVideo(products);
-    const timeSaleProduct = timeSale.slice(0, 8);
 
     res.json({ bestSeller, newProduct, introVideo, timeSaleProduct });
   } catch (error) {
