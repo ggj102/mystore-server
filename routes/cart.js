@@ -22,29 +22,25 @@ router.get("/", authenticateToken, async (req, res) => {
     for (const data of cartData) {
       const { item_id, option_id } = data;
 
-      const transaction = await prisma.$transaction([
-        prisma.Product.findUnique({
-          where: {
-            id: item_id,
+      const product = await prisma.Product.findUnique({
+        where: {
+          id: item_id,
+        },
+        include: {
+          product_detail: true,
+          product_option: {
+            where: {
+              option_id,
+            },
           },
-        }),
-        prisma.Product_Detail.findUnique({
-          where: {
-            id: item_id,
-          },
-        }),
-        prisma.Product_Option.findUnique({
-          where: {
-            option_id,
-          },
-        }),
-      ]);
+        },
+      });
 
       const cartProduct = {
-        ...transaction[0],
-        product_detail: { ...transaction[1] },
-        product_option: { ...transaction[2] },
+        ...product,
+        product_option: product.product_option[0],
         cart_info: { ...data },
+        isChecked: false,
       };
 
       cartPrdData.push(cartProduct);
