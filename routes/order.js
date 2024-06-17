@@ -19,30 +19,25 @@ const getOrderItem = async (order_id) => {
   for (const item of items) {
     const { item_id, option_id, count } = item;
 
-    const transaction = await prisma.$transaction([
-      prisma.Product.findUnique({
-        where: {
-          id: item_id,
+    const product = await prisma.Product.findUnique({
+      where: {
+        id: item_id,
+      },
+      include: {
+        product_detail: true,
+        product_option: {
+          where: {
+            option_id,
+          },
         },
-      }),
-      prisma.Product_Detail.findUnique({
-        where: {
-          id: item_id,
-        },
-      }),
-      prisma.Product_Option.findUnique({
-        where: {
-          option_id,
-        },
-      }),
-    ]);
+      },
+    });
 
     const itemData = {
-      ...transaction[0],
+      ...product,
       order_id,
       cart_info: { count },
-      product_detail: transaction[1],
-      product_option: transaction[2],
+      product_option: product.product_option[0],
     };
 
     order_items.push(itemData);
@@ -56,24 +51,17 @@ router.get("/", authenticateToken, async (req, res) => {
     const user_id = getAccessTokenUserId(req);
     const order_id = parseInt(req.query.order_id);
 
-    const transaction = await prisma.$transaction([
-      prisma.Order.findUnique({
-        where: {
-          id: order_id,
-          user_id,
-        },
-      }),
+    const order = await prisma.Order.findUnique({
+      where: {
+        id: order_id,
+        user_id,
+      },
+      include: {
+        order_Item: true,
+      },
+    });
 
-      prisma.Order_Item.findMany({
-        where: {
-          order_id,
-        },
-      }),
-    ]);
-
-    const [order, order_item] = transaction;
-
-    return res.json({ order, order_item });
+    return res.json({ order, order_item: order.order_item });
   } catch (error) {
     console.error("Error fetching products:", error);
     res.status(500).json({ error: "An error occurred while fetching data" });
