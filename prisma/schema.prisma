@@ -76,6 +76,7 @@ model Product {
   is_issue       Boolean
   is_event       Boolean
   product_detail Product_Detail?
+  product_option Product_Option[]
 }
 
 model Product_Detail {
@@ -94,6 +95,7 @@ model Product_Option {
   item_id        Int
   name           String
   option_price   Int
+  product        Product? @relation(fields: [item_id], references: [id])
 }
 
 model Cart {
