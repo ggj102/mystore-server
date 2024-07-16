@@ -77,7 +77,7 @@ router.post("/", authenticateToken, async (req, res) => {
     const result = await prisma.Order.create({
       data: {
         user_id,
-        order_Item: {
+        order_item: {
           create: order_item.map((item) => {
             const { id, product_option, cart_info } = item;
 
@@ -89,7 +89,7 @@ router.post("/", authenticateToken, async (req, res) => {
           }),
         },
       },
-      include: { order_Item: true },
+      include: { order_item: true },
     });
 
     return res.json({ order_id: result.id });
