@@ -61,7 +61,7 @@ router.get("/", authenticateToken, async (req, res) => {
       },
     });
 
-    return res.json(order);
+    return res.json({ order, order_item: order.order_item });
   } catch (error) {
     console.error("Error fetching products:", error);
     res.status(500).json({ error: "An error occurred while fetching data" });
