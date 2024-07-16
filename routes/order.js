@@ -57,11 +57,11 @@ router.get("/", authenticateToken, async (req, res) => {
         user_id,
       },
       include: {
-        order_Item: true,
+        order_item: true,
       },
     });
 
-    return res.json({ order, order_item: order.order_item });
+    return res.json(order);
   } catch (error) {
     console.error("Error fetching products:", error);
     res.status(500).json({ error: "An error occurred while fetching data" });

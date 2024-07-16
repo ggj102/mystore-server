@@ -121,7 +121,7 @@ model Order {
   updated_at            DateTime @updatedAt
   payment_key          String?
   payment_method       String?
-  order_Item           Order_Item[]
+  order_item           Order_Item[]
 }
 
 model Order_Item {
