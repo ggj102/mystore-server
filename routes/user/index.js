@@ -70,6 +70,7 @@ router.get("/order", authenticateToken, async (req, res) => {
         user_id,
         payment_key: { not: null },
       },
+      orderBy: { updated_at: "desc" },
     });
 
     const orderData = [];
