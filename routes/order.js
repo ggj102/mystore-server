@@ -236,10 +236,12 @@ router.get("/success", async (req, res) => {
       });
     }
 
-    res.redirect(
-      302,
-      `http://localhost:3000/orderComplete?order_id=${order_id}`
-    );
+    const redirectUrl =
+      process.env.NODE_ENV === "production"
+        ? "https://mystore-bay.vercel.app"
+        : "http://localhost:3000";
+
+    res.redirect(302, `${redirectUrl}/orderComplete?order_id=${order_id}`);
   } catch (error) {
     console.error("Error updating product:", error);
     res
